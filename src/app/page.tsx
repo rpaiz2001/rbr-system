@@ -1,95 +1,101 @@
-import Image from "next/image";
+"use client";
+
+import { NavBar } from "./common/navbar/nav-bar";
 import styles from "./page.module.css";
-
+import { Menu, MenuProps } from "antd";
+import {
+  AppstoreOutlined,
+  MailOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
+import { useState } from "react";
+import EventsHub from "./components/event/event-hub/events-hub";
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  type MenuItem = Required<MenuProps>["items"][number];
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  const items: MenuItem[] = [
+    {
+      key: "sub1",
+      label: "Navigation One",
+      icon: <MailOutlined />,
+      children: [
+        {
+          key: "g1",
+          label: "Item 1",
+          type: "group",
+          children: [
+            { key: "1", label: "Option 1" },
+            { key: "2", label: "Option 2" },
+          ],
+        },
+        {
+          key: "g2",
+          label: "Item 2",
+          type: "group",
+          children: [
+            { key: "3", label: "Option 3" },
+            { key: "4", label: "Option 4" },
+          ],
+        },
+      ],
+    },
+    {
+      key: "sub2",
+      label: "Navigation Two",
+      icon: <AppstoreOutlined />,
+      children: [
+        { key: "5", label: "Option 5" },
+        { key: "6", label: "Option 6" },
+        {
+          key: "sub3",
+          label: "Submenu",
+          children: [
+            { key: "7", label: "Option 7" },
+            { key: "8", label: "Option 8" },
+          ],
+        },
+      ],
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "sub4",
+      label: "Navigation Three",
+      icon: <SettingOutlined />,
+      children: [
+        { key: "9", label: "Option 9" },
+        { key: "10", label: "Option 10" },
+        { key: "11", label: "Option 11" },
+        { key: "12", label: "Option 12" },
+      ],
+    },
+  ];
+
+  const [collapsed, setCollapsed] = useState(true);
+
+  return (
+    <div className={styles["page"]}>
+      <NavBar state={collapsed} setCollapsed={setCollapsed} />
+      <div className={styles["page-container"]}>
+        <div className={styles["menu-container"]}>
+          <Menu
+            onClick={() => {}}
+            style={{
+              maxWidth: "fit-content",
+            }}
+            className={styles["sidebar"]}
+            defaultSelectedKeys={["1"]}
+            defaultOpenKeys={["sub1"]}
+            mode="inline"
+            inlineCollapsed={collapsed}
+            items={items}
+          />
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className={styles["page-content"]}>
+          <EventsHub />
+        </div>
+      </div>
     </div>
   );
 }

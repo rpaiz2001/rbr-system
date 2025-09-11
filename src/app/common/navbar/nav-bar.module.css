@@ -1,0 +1,52 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  z-index: 1000;
+  background-color: var(--primary-background);
+  padding: 1rem 2rem;
+  width: 100%;
+  flex-wrap: wrap;
+  min-height: 80px;
+  max-height: fit-content;
+  row-gap: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* soft shadow */
+}
+
+.navbar-item {
+  display: flex;
+  flex: 1;
+  flex-shrink: 1;
+  gap: 2rem;
+  align-items: center;
+}
+
+.start {
+  justify-content: start;
+}
+
+.end {
+  justify-content: end;
+}
+
+.header {
+  font-weight: var(--bold-font);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.item-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.icon {
+  font-size: var(--small-icon-size);
+}
+
+.button-color {
+  background-color: "black";
+  color: "white";
+}

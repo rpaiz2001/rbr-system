@@ -1,0 +1,75 @@
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary-background: #f4f4f4;
+  --primary-background-hover: #e9e7e7;
+
+  --extra-bold-font: 800;
+  --bold-font: 600;
+  --medium-font: 500;
+  --regular-font: 400;
+  --small-icon-size: 1.5rem;
+  --medium-icon-size: 2rem;
+  --large-icon-size: 2.5rem;
+  --font-family: "Playfair Display", serif;
+  --primary-button: #1e1e1e;
+  --progress-color: #5c6bc0;
+  --progress-color-hover: #5c6bc0ba;
+  --badge-color: #b3261e;
+}
+
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+    --primary-background: #f4f4f4;
+  }
+}
+
+html,
+body {
+  max-width: 100vw;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body,
+.ant-typography,
+.ant-btn,
+.ant-dropdown,
+.ant-menu,
+.ant-divider,
+.ant-select {
+  font-family: var(--font-family) !important;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}

@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap");
+
+.page {
+}
+
+@media (prefers-color-scheme: dark) {
+  .page {
+  }
+}
+
+.page-container {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+}
+
+.page-content {
+  padding: 2.5rem 1rem;
+  flex-grow: 1;
+}
+
+.sidebar {
+  background-color: var(--background);
+  min-height: 40vh;
+  max-height: 80vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: fit-content;
+  box-shadow: 0 0px 15px rgba(0, 0, 0, 0.2) !important;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+/* Custom scrollbar styles for .sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+  border-radius: 8px;
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: #bdbdbd;
+  border-radius: 8px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* For Firefox */
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: #bdbdbd transparent;
+}
+
+.menu-container {
+  position: sticky;
+  top: 80;
+  overflow: "hidden";
+  max-height: 100vh;
+  display: flex;
+  height: calc(100vh - 80px);
+  align-items: center;
+}

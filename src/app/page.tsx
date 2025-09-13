@@ -4,55 +4,48 @@ import { NavBar } from "./common/navbar/nav-bar";
 import styles from "./page.module.css";
 import { Menu, MenuProps } from "antd";
 import {
-  AppstoreOutlined,
-  MailOutlined,
+  HomeOutlined,
+  ScheduleOutlined,
   SettingOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
 import EventsHub from "./components/event/event-hub/events-hub";
+import EventList from "./components/events-list/event-list";
+import CreateEventModal from "./components/event/create-event-modal/create-event-modal";
 export default function Home() {
   type MenuItem = Required<MenuProps>["items"][number];
 
+  const [currentView, setCurrentView] = useState("events-hub");
+
+  const renderContent = () => {
+    switch (currentView) {
+      case "events-hub":
+        return <EventsHub />;
+      case "events-list":
+        return <EventList />;
+      default:
+        return <EventsHub />;
+    }
+  };
+
   const items: MenuItem[] = [
     {
-      key: "sub1",
-      label: "Navigation One",
-      icon: <MailOutlined />,
+      key: "events",
+      label: "Events",
+      icon: <ScheduleOutlined />,
       children: [
         {
-          key: "g1",
-          label: "Item 1",
-          type: "group",
-          children: [
-            { key: "1", label: "Option 1" },
-            { key: "2", label: "Option 2" },
-          ],
+          key: "events-hub",
+          label: "Events Hub",
+          icon: <HomeOutlined />,
+          onClick: () => setCurrentView("events-hub"),
         },
         {
-          key: "g2",
-          label: "Item 2",
-          type: "group",
-          children: [
-            { key: "3", label: "Option 3" },
-            { key: "4", label: "Option 4" },
-          ],
-        },
-      ],
-    },
-    {
-      key: "sub2",
-      label: "Navigation Two",
-      icon: <AppstoreOutlined />,
-      children: [
-        { key: "5", label: "Option 5" },
-        { key: "6", label: "Option 6" },
-        {
-          key: "sub3",
-          label: "Submenu",
-          children: [
-            { key: "7", label: "Option 7" },
-            { key: "8", label: "Option 8" },
-          ],
+          key: "events-list",
+          label: "Events List",
+          icon: <UnorderedListOutlined />,
+          onClick: () => setCurrentView("events-list"),
         },
       ],
     },
@@ -85,17 +78,15 @@ export default function Home() {
               maxWidth: "fit-content",
             }}
             className={styles["sidebar"]}
-            defaultSelectedKeys={["1"]}
-            defaultOpenKeys={["sub1"]}
             mode="inline"
             inlineCollapsed={collapsed}
             items={items}
           />
         </div>
-        <div className={styles["page-content"]}>
-          <EventsHub />
-        </div>
+        <div className={styles["page-content"]}>{renderContent()}</div>
       </div>
+
+      <CreateEventModal></CreateEventModal>
     </div>
   );
 }

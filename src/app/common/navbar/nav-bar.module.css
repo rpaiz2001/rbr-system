@@ -4,12 +4,13 @@
   display: flex;
   z-index: 1000;
   background-color: var(--primary-background);
+  opacity: 0.95;
   padding: 1rem 2rem;
   width: 100%;
   flex-wrap: wrap;
   min-height: 80px;
   max-height: fit-content;
-  row-gap: 20px;
+  row-gap: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* soft shadow */
 }
 

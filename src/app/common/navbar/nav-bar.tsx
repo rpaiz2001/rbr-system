@@ -1,44 +1,46 @@
 import React from "react";
 import styles from "./nav-bar.module.css";
-import {
-  BellOutlined,
-  DownOutlined,
-  PlusOutlined,
-  GiftOutlined,
-} from "@ant-design/icons";
-import { Badge, Space, Button, Dropdown, MenuProps, message } from "antd";
+import { BellOutlined, DownOutlined, PlusOutlined } from "@ant-design/icons";
+import { Badge, Space, Button, Dropdown, MenuProps } from "antd";
+import { eventList } from "@/app/data/EventList";
+import { EventStatus } from "@/app/components/events-list/models/enums/event-list-enums";
+import { useEvent } from "@/app/contexts/EventContext";
+import { EventActions } from "@/app/contexts/EventActions";
 
 type NavBarProps = {
   state: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const NavBar: React.FC<NavBarProps> = ({ state, setCollapsed }) => {
-  const items: MenuProps["items"] = [
-    {
-      label: "Emma & Liam’s Wedding",
-      key: "1",
-      icon: <GiftOutlined />,
+export const NavBar: React.FC<NavBarProps> = ({ setCollapsed }) => {
+  const {
+    state,
+    state: {
+      events: { selectedEvent },
     },
-    {
-      label: "Olivia & Noah’s Wedding",
-      key: "2",
-      icon: <GiftOutlined />,
-    },
-    {
-      label: "Ava & Ethan’s Wedding",
-      key: "3",
-      icon: <GiftOutlined />,
-    },
-  ];
+    dispatch,
+  } = useEvent();
+
+  const mapEventList = eventList
+    .filter((item) => item.status === EventStatus.IN_PROGRESS)
+    .map((item) => {
+      const originalIndex = eventList.findIndex((event) => event === item);
+      return {
+        label: item.eventName,
+        key: originalIndex.toString(),
+      };
+    });
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
-    message.info("Click on menu item.");
-    console.log("click", e);
+    const eventIndex = parseInt(e.key as string);
+    dispatch({
+      type: EventActions.SET_SELECTED_EVENT,
+      payload: eventIndex,
+    });
   };
 
   const menuProps = {
-    items,
+    items: mapEventList,
     onClick: handleMenuClick,
   };
 
@@ -58,7 +60,7 @@ export const NavBar: React.FC<NavBarProps> = ({ state, setCollapsed }) => {
         <Dropdown menu={menuProps}>
           <Button>
             <Space>
-              Sarah & Mikes Wedding
+              {selectedEvent?.eventName || "Select Event"}
               <DownOutlined />
             </Space>
           </Button>

@@ -1,6 +1,5 @@
-
 .page-container {
-  gap: 48px;
+  gap: 2rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -8,7 +7,7 @@
 
 .cards-container {
   width: 100%;
-  gap: 20px;
+  gap: 1rem;
   display: flex;
   flex-direction: column;
 }

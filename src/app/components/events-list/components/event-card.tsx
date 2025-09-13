@@ -3,6 +3,7 @@ import styles from "./event-card.module.css";
 import { Button, Divider } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import { EventCardProps } from "../models/event-card-props-model";
+import { EventStatus } from "../models/enums/event-list-enums";
 
 export const EventCard: React.FC<EventCardProps> = ({
   eventName,
@@ -16,6 +17,13 @@ export const EventCard: React.FC<EventCardProps> = ({
   tasks,
   sits,
 }) => {
+  const statusCSSVariables: Record<EventStatus, string> = {
+    [EventStatus.NOT_STARTED]: "var(--status-not-started)",
+    [EventStatus.IN_PROGRESS]: "var(--status-in-progress)",
+    [EventStatus.COMPLETED]: "var(--status-completed)",
+    [EventStatus.CANCELED]: "var(--status-canceled)",
+  };
+
   return (
     <div className={styles["event-card"]}>
       <div className={styles["event-card-container"]}>
@@ -25,7 +33,7 @@ export const EventCard: React.FC<EventCardProps> = ({
               <div style={{ display: "flex" }}>
                 <p>
                   {eventName} -{" "}
-                  <span style={{ color: "var(--progress-color)" }}>
+                  <span style={{ color: statusCSSVariables[status] }}>
                     {status}
                   </span>
                 </p>
@@ -49,6 +57,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         <div className={styles["event-card-right-side"]}>
           <Button
             className={styles["event-card-button"]}
+            style={{ backgroundColor: statusCSSVariables[status] }}
             type="text"
             icon={<EditOutlined />}
           ></Button>

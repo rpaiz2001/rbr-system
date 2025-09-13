@@ -1,18 +1,10 @@
 import React from "react";
 import styles from "./card.module.css";
-const Card = () => {
+const Card = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div
-      style={{
-        display: "flex",
-        width: "100%",
-        padding: "40px",
-        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2);",
-        backgroundColor: "var(--primary-background)",
-        borderRadius: "8px",
-      }}
-    >
+    <div className={styles["card"]}>
       <p className={styles["header"]}>Header</p>
+      <div>{children}</div>
     </div>
   );
 };

@@ -1,21 +1,29 @@
 :root {
-  --background: #ffffff;
+  --background: #fafbfc;
   --foreground: #171717;
-  --primary-background: #f4f4f4;
+  --primary-background: #ffffff;
   --primary-background-hover: #e9e7e7;
+  --text-color: #171717;
+  --text-color-secondary: #666666;
+
+  /*Colors for status*/
+  --status-in-progress: #5c6bc0;
+  --status-completed: #6db193;
+  --status-canceled: #d38c8c;
+  --status-not-started: #888888;
 
   --extra-bold-font: 800;
   --bold-font: 600;
   --medium-font: 500;
   --regular-font: 400;
-  --small-icon-size: 1.5rem;
+  --small-icon-size: 1.2rem;
   --medium-icon-size: 2rem;
   --large-icon-size: 2.5rem;
   --font-family: "Playfair Display", serif;
   --primary-button: #1e1e1e;
   --progress-color: #5c6bc0;
   --progress-color-hover: #5c6bc0ba;
-  --badge-color: #b3261e;
+  --badge-color: #d55851;
 }
 
 h1 {
@@ -26,13 +34,15 @@ h2 {
   font-size: 1.5rem;
 }
 
+/*
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
-    --foreground: #171717;
-    --primary-background: #f4f4f4;
+    --background: var(--primary-background);
+    --foreground: var(--foreground);
+    --primary-background: var(--primary-background);
   }
 }
+  */
 
 html,
 body {

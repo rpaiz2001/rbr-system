@@ -2,20 +2,22 @@ import React from "react";
 import { Divider } from "antd";
 import styles from "./header.module.css";
 
-const Header = ({ name, subheader }: { name: string; subheader?: string }) => {
-  const items: string[] = [
-    "1 year to go",
-    "Started on 6 August 2025",
-    "Wedding day on 6 August 2026",
-    "Planning in progress",
-  ];
+const Header = ({
+  name,
+  subheader,
+  items,
+}: {
+  name: string;
+  subheader?: string;
+  items?: string[];
+}) => {
   return (
     <div className={styles["header"]}>
-      <h1>{name}</h1>
+      <h2>{name}</h2>
       {subheader && (
         <div className={styles["sub-header-container"]}>
           <Divider plain>
-            <h2>{subheader}</h2>
+            <h3>{subheader}</h3>
           </Divider>
         </div>
       )}
@@ -23,13 +25,12 @@ const Header = ({ name, subheader }: { name: string; subheader?: string }) => {
         style={{
           display: "flex",
           maxWidth: "100vw",
-          gap: "20px",
           flexWrap: "wrap",
           justifyContent: "center",
           textAlign: "center",
         }}
       >
-        {items.map((element, index) => {
+        {items?.map((element, index) => {
           return (
             <div
               key={index}
@@ -40,15 +41,25 @@ const Header = ({ name, subheader }: { name: string; subheader?: string }) => {
                 gap: "10px",
               }}
             >
-              <div style={{ width: "30px !important" }}>
-                <Divider></Divider>
-              </div>{" "}
-              <p style={{ height: "fit-content", maxWidth: "200px" }}>
-                element
-              </p>
-              <div style={{ width: "30px !important" }}>
+              <div>
                 <Divider></Divider>
               </div>
+              <p
+                style={{
+                  height: "fit-content",
+                  maxWidth: "200px",
+                  fontSize: "0.8rem",
+                  color: "var(--text-color-secondary)",
+                  fontWeight: "var(--bold-font)",
+                }}
+              >
+                {element}
+              </p>
+              {index !== items.length - 1 && (
+                <div style={{ color: "black" }}>
+                  <Divider style={{ width: "30px" }}></Divider>
+                </div>
+              )}
             </div>
           );
         })}

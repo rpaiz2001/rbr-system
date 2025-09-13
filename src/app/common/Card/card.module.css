@@ -3,3 +3,14 @@
   font-weight: var(--bold-font);
   font-size: 24px;
 }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  padding: 2rem;
+  box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.2);
+  border-radius: 0.5rem;
+  background-color: var(--primary-background);
+}

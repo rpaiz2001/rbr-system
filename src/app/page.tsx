@@ -8,10 +8,12 @@ import {
   ScheduleOutlined,
   SettingOutlined,
   UnorderedListOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
 import EventsHub from "./components/event/event-hub/events-hub";
 import EventList from "./components/events-list/event-list";
+import TableAssignmentPage from "./components/event/table-assignment/TableAssignmentPage";
 import CreateEventModal from "./components/event/create-event-modal/create-event-modal";
 export default function Home() {
   type MenuItem = Required<MenuProps>["items"][number];
@@ -24,6 +26,8 @@ export default function Home() {
         return <EventsHub />;
       case "events-list":
         return <EventList />;
+      case "table-assignment":
+        return <TableAssignmentPage />;
       default:
         return <EventsHub />;
     }
@@ -46,6 +50,12 @@ export default function Home() {
           label: "Events List",
           icon: <UnorderedListOutlined />,
           onClick: () => setCurrentView("events-list"),
+        },
+        {
+          key: "table-assignment",
+          label: "Table Assignment",
+          icon: <TeamOutlined />,
+          onClick: () => setCurrentView("table-assignment"),
         },
       ],
     },

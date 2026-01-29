@@ -57,14 +57,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body,
-.ant-typography,
-.ant-btn,
-.ant-dropdown,
-.ant-menu,
-.ant-divider,
-.ant-select {
+/* Apply font family to all Ant Design components */
+[class*="ant-"] {
   font-family: var(--font-family) !important;
+}
+
+/* Apply to nested elements within Ant Design components */
+[class*="ant-"] * {
+  font-family: var(--font-family) !important;
+}
+
+.ant-input-number-input {
+  font-family: tabular-nums !important;
+  letter-spacing: 0.5px !important;
 }
 
 * {

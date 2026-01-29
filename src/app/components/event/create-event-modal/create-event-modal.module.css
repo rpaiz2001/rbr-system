@@ -1,0 +1,84 @@
+/* Create Event Modal Styles */
+.createEventModal {
+  margin-top: 1.875rem; /* 30px */
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.okButton {
+  background-color: var(--foreground);
+}
+
+/* Form Section Styles */
+.formSectionTitle {
+  color: var(--text-color-secondary);
+}
+
+.formSectionDivider {
+  margin: 0.8rem 0;
+}
+
+/* Event Info Section */
+.eventInfoContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eventInfoItem {
+  flex-grow: 1;
+}
+
+.datePicker {
+  width: 100%;
+}
+
+/* Details Section */
+.detailsContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.detailsItem {
+  flex-grow: 1;
+}
+
+.themeSelect {
+  width: 100%;
+}
+
+.budgetInput {
+  width: 100%;
+}
+
+.descriptionTextarea {
+  min-height: 6.25rem; /* 100px */
+}
+
+.commentsTextarea {
+  min-height: 6.25rem; /* 100px */
+}
+
+/* Client Info Section */
+.clientInfoTitle {
+  margin-bottom: 0;
+}
+
+.clientInfoContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.clientInfoItem {
+  flex-grow: 1;
+}
+
+/* Icon Styles */
+.iconSecondary {
+  color: var(--text-color-secondary);
+}

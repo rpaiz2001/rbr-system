@@ -44,6 +44,13 @@ export const NavBar: React.FC<NavBarProps> = ({ setCollapsed }) => {
     onClick: handleMenuClick,
   };
 
+  const handleNewEvent = () => {
+    dispatch({
+      type: EventActions.SET_OPEN_CREATE_EVENT_MODAL,
+      payload: true,
+    });
+  };
+
   return (
     <div className={styles["navbar"]}>
       <div className={`${styles["navbar-item"]} ${styles["start"]}`}>
@@ -65,7 +72,11 @@ export const NavBar: React.FC<NavBarProps> = ({ setCollapsed }) => {
             </Space>
           </Button>
         </Dropdown>
-        <Button icon={<PlusOutlined />} className={styles["button-color"]}>
+        <Button
+          icon={<PlusOutlined />}
+          className={styles["button-color"]}
+          onClick={handleNewEvent}
+        >
           New Event
         </Button>
         <Badge

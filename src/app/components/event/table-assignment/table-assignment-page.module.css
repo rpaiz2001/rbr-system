@@ -23,31 +23,38 @@
 }
 
 .contentGrid {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
+  display: flex;
   gap: 12px;
   min-height: 560px;
+  align-items: stretch;
 }
 
 .canvasCard {
   height: 100%;
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
 }
 
 .tablesCanvas {
   position: relative;
   width: 100%;
-  height: 700px;
+  height: 100%;
+  min-height: 0;
 
-  background-image: linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.04) 1px,
-      transparent 1px
-    ),
+  background-image:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
     url("/backdrop.png");
 
-  background-size: 40px 40px, 40px 40px, 100% 100%;
-  background-position: top left, top left, center center;
+  background-size:
+    40px 40px,
+    40px 40px,
+    100% 100%;
+  background-position:
+    top left,
+    top left,
+    center center;
   background-repeat: repeat, repeat, no-repeat;
 
   border-radius: 8px;
@@ -57,9 +64,11 @@
 .tableTile {
   position: absolute;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: var(--primary-background);
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), var(--primary-background));
   cursor: grab;
-  transition: transform 120ms ease, border-color 120ms ease,
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
     box-shadow 120ms ease;
   pointer-events: auto;
   z-index: 1;
@@ -76,17 +85,17 @@
 .tableTile:hover {
   transform: translateY(-1px);
   border-color: rgba(0, 0, 0, 0.18);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
 }
 
 .tableTileSelected {
-  border-color: rgba(92, 107, 192, 0.65);
-  box-shadow: 0 8px 20px rgba(92, 107, 192, 0.18);
+  border-color: rgba(92, 107, 192, 0.9);
+  box-shadow: 0 12px 36px rgba(92, 107, 192, 0.18);
 }
 
 .tableTileOver {
-  border-color: rgba(92, 107, 192, 0.9);
-  box-shadow: 0 10px 24px rgba(92, 107, 192, 0.22);
+  border-color: rgba(60, 150, 90, 0.9);
+  box-shadow: 0 12px 28px rgba(60, 150, 90, 0.18);
 }
 
 /* === SHAPES === */
@@ -124,11 +133,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  align-items: center;
+}
+
+.occupancyBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .occupancyBadge :global(.ant-badge-count) {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  min-width: 44px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .tableMeta {
@@ -231,4 +252,8 @@
   .contentGrid {
     grid-template-columns: 1fr;
   }
+}
+
+.aiChatColumn {
+  height: 100%;
 }

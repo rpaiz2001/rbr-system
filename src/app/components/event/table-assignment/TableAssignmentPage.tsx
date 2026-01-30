@@ -2,15 +2,6 @@
 import styles from "./table-assignment-page.module.css";
 import data from "@/data/tables-data.json";
 import {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
-import {
   Badge,
   Card,
   Empty,
@@ -22,27 +13,45 @@ import {
   Space,
   Tag,
   Typography,
+  Button,
+  Tooltip,
 } from "antd";
-import {
-  ArrowsAltOutlined,
-  BorderOutlined,
-  ColumnWidthOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
   pointerWithin,
-  useDndContext,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import React, {
+  memo,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type CSSProperties,
+} from "react";
+import SeatingAIChat from "./SeatingAIChat";
+import { FloatButton } from "antd";
+import {
+  BorderOutlined,
+  ColumnWidthOutlined,
+  ArrowsAltOutlined,
+  TeamOutlined,
+  MessageOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
+// ...existing code...
+import type {
+  HFGuest,
+  HFTable,
+  SeatingResponse as HFSeatingResponse,
+} from "./huggingface.service";
 
 type Relation = {
   relation_id: string;
@@ -66,6 +75,7 @@ type Guest = {
   notes?: string | null;
 };
 
+import { UserOutlined } from "@ant-design/icons";
 type TableLayout = {
   layout_id: string;
   event_id: string;
@@ -119,7 +129,7 @@ function getShapeIcon(shape: Table["shape"]) {
 
 function getNextAvailableSeatNumber(
   capacity: number,
-  usedSeatNumbers: number[]
+  usedSeatNumbers: number[],
 ) {
   const used = new Set(usedSeatNumbers);
   for (let seat = 1; seat <= capacity; seat += 1) {
@@ -149,7 +159,7 @@ const DraggableGuestRow = memo(function DraggableGuestRow({
       transform
         ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
         : {},
-    [transform]
+    [transform],
   );
 
   return (
@@ -167,7 +177,7 @@ const DraggableGuestRow = memo(function DraggableGuestRow({
         <Space size={8} wrap>
           <Typography.Text strong>{fullName(guest)}</Typography.Text>
           {isAssigned ? (
-            <Tag color="geekblue">Assigned</Tag>
+            <Tag color="green">Assigned</Tag>
           ) : (
             <Tag>Unassigned</Tag>
           )}
@@ -194,22 +204,25 @@ const DraggableGuestRow = memo(function DraggableGuestRow({
 const TableTileContent = memo(function TableTileContent({
   table,
   occupancy,
-  full,
+  capacity,
+  label,
+  badgeColor,
 }: {
   table: Table;
   occupancy: number;
-  full: boolean;
+  capacity: number;
+  label: string;
+  badgeColor: string;
 }) {
   return (
     <>
       <div className={styles.tableTileHeader}>
         <Space size={8}>
-          <span className={styles.shapeIcon}>{getShapeIcon(table.shape)}</span>
-          <Typography.Text strong>{table.table_id}</Typography.Text>
+          <Typography.Text strong>{label}</Typography.Text>
         </Space>
         <Badge
-          count={`${occupancy}/${table.total_number}`}
-          color={full ? "volcano" : "geekblue"}
+          count={`${occupancy}/${capacity}`}
+          color={badgeColor}
           className={styles.occupancyBadge}
         />
       </div>
@@ -232,6 +245,26 @@ function getTableShapeClass(shape: Table["shape"]) {
     default:
       return styles.tableSquare;
   }
+}
+
+// Friendly label for a table id (e.g. "table-01" -> "Table 1")
+function getTableLabel(table: Table) {
+  const m = table.table_id.match(/(?:table[-_]?)(\d+)/i);
+  if (m) return `Table ${Number(m[1])}`;
+  // fallback: capitalize and replace dashes
+  return table.table_id
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Return badge color based on occupancy ratio
+function getBadgeColor(occupancy: number, capacity: number) {
+  if (capacity <= 0) return "default";
+  const ratio = occupancy / capacity;
+  if (ratio >= 1) return "volcano"; // full/over
+  if (ratio >= 0.8) return "orange"; // almost full
+  if (ratio >= 0.5) return "gold"; // half or more
+  return "green"; // plenty of space
 }
 
 const DroppableTableTile = memo(function DroppableTableTile({
@@ -310,7 +343,14 @@ const DroppableTableTile = memo(function DroppableTableTile({
       {...attributes}
       {...listeners}
     >
-      <TableTileContent table={table} occupancy={occupancy} full={full} />
+      {/* compute label and badge color at parent level if needed */}
+      <TableTileContent
+        table={table}
+        occupancy={occupancy}
+        capacity={table.total_number}
+        label={getTableLabel(table)}
+        badgeColor={getBadgeColor(occupancy, table.total_number)}
+      />
     </button>
   );
 });
@@ -324,6 +364,7 @@ const TablesCanvas = memo(function TablesCanvas({
   gridWidth,
   gridHeight,
   onTableMove,
+  guestsById,
 }: {
   tableOrder: string[];
   tablesForActiveLayoutById: Map<string, Table>;
@@ -333,6 +374,7 @@ const TablesCanvas = memo(function TablesCanvas({
   gridWidth: number;
   gridHeight: number;
   onTableMove: (tableId: string, newX: number, newY: number) => void;
+  guestsById: Map<string, Guest>;
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
@@ -356,7 +398,14 @@ const TablesCanvas = memo(function TablesCanvas({
         .map((id) => tablesForActiveLayoutById.get(id))
         .filter((t): t is Table => Boolean(t))
         .map((t) => {
-          const occupancy = assignmentsByTable.get(t.table_id)?.length ?? 0;
+          // occupancy should count people (party_size) rather than number of assigned rows
+          const occupancy = (assignmentsByTable.get(t.table_id) ?? []).reduce(
+            (sum, a) => {
+              const g = guestsById.get(a.guest_id);
+              return sum + (g?.party_size ?? 1);
+            },
+            0,
+          );
           const isSelected = t.table_id === selectedTableId;
           const full = occupancy >= t.total_number;
 
@@ -390,6 +439,7 @@ const UnassignedDropZone = memo(function UnassignedDropZone() {
         styles.unassignedDropZone,
         isOver ? styles.dropZoneOver : "",
       ].join(" ")}
+      style={{ margin: 12 }}
     >
       <Space size={8} align="center">
         <UserOutlined />
@@ -408,7 +458,7 @@ const TableAssignmentPage = () => {
   const layouts = data.table_layouts as TableLayout[];
   const [tables, setTables] = useState<Table[]>(data.tables as Table[]);
   const [assignments, setAssignments] = useState<TableAssignment[]>(
-    data.table_assignments as TableAssignment[]
+    data.table_assignments as TableAssignment[],
   );
 
   const activeLayout =
@@ -417,9 +467,12 @@ const TableAssignmentPage = () => {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [guestSearch, setGuestSearch] = useState("");
   const [relationFilter, setRelationFilter] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [sideView, setSideView] = useState<"guests" | "table">("guests");
+  const [sidePanelOpen, setSidePanelOpen] = useState(true);
+  // Floating AI Chat state
+  const [aiChatOpen, setAIChatOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<DragId | null>(null);
 
   const relationsById = useMemo(() => {
@@ -444,7 +497,7 @@ const TableAssignmentPage = () => {
 
   const tableOrder = useMemo(
     () => tablesForActiveLayout.map((t) => t.table_id),
-    [tablesForActiveLayout]
+    [tablesForActiveLayout],
   );
 
   const assignmentsByTable = useMemo(() => {
@@ -482,7 +535,7 @@ const TableAssignmentPage = () => {
         value: "table",
       },
     ],
-    []
+    [],
   );
 
   const assignedGuestIds = useMemo(() => {
@@ -507,6 +560,13 @@ const TableAssignmentPage = () => {
       .filter((g): g is Guest => Boolean(g));
   }, [guestsById, selectedTableAssignments]);
 
+  const selectedTablePeopleCount = useMemo(() => {
+    return selectedTableAssignments.reduce((sum, a) => {
+      const g = guestsById.get(a.guest_id);
+      return sum + (g?.party_size ?? 1);
+    }, 0);
+  }, [selectedTableAssignments, guestsById]);
+
   const filteredGuests = useMemo(() => {
     const q = guestSearch.trim().toLowerCase();
     return guests
@@ -523,19 +583,82 @@ const TableAssignmentPage = () => {
 
   const relationOptions = useMemo(
     () => relations.map((r) => ({ value: r.relation_id, label: r.name })),
-    [relations]
+    [relations],
   );
 
   const onTableMove = useCallback(
     (tableId: string, newX: number, newY: number) => {
       setTables((prevTables) =>
         prevTables.map((t) =>
-          t.table_id === tableId ? { ...t, x_grid: newX, y_grid: newY } : t
-        )
+          t.table_id === tableId ? { ...t, x_grid: newX, y_grid: newY } : t,
+        ),
       );
     },
-    []
+    [],
   );
+
+  // Convert internal guest/table shapes into HF-compatible shapes
+  const hfGuests = useMemo<HFGuest[]>(() => {
+    return guests.map((g) => ({
+      id: g.guest_id,
+      name: fullName(g),
+      tags: [relationsById.get(g.relation_id)?.name ?? "unknown"],
+      tableId:
+        assignments.find((a) => a.guest_id === g.guest_id)?.table_id ?? null,
+      partySize: g.party_size ?? 1,
+    }));
+  }, [guests, assignments, relationsById]);
+
+  const hfTables = useMemo<HFTable[]>(() => {
+    return tablesForActiveLayout.map((t) => ({
+      id: t.table_id,
+      name: getTableLabel(t),
+      shape: t.shape,
+      capacity: t.total_number,
+      position: { x: t.x_grid, y: t.y_grid },
+    }));
+  }, [tablesForActiveLayout]);
+
+  const handleApplyAISeating = (
+    assignmentsFromAI: HFSeatingResponse["assignments"],
+  ) => {
+    // Map AI assignments into our TableAssignment shape. We'll assign seat numbers greedily.
+    setAssignments((prev) => {
+      // Start from previous assignments but remove any assignments for guests present in AI result
+      const withoutAI = prev.filter(
+        (a) => !assignmentsFromAI.find((x) => x.guestId === a.guest_id),
+      );
+
+      // Build a map of current used seats per table
+      const usedSeats = new Map<string, number[]>();
+      for (const a of withoutAI) {
+        const arr = usedSeats.get(a.table_id) ?? [];
+        arr.push(a.seat_number);
+        usedSeats.set(a.table_id, arr);
+      }
+
+      const newAssignments: TableAssignment[] = [];
+
+      for (const ai of assignmentsFromAI) {
+        const tableId = ai.tableId;
+        const tbl = tablesForActiveLayout.find((t) => t.table_id === tableId);
+        if (!tbl) continue; // skip unknown tables
+
+        const used = usedSeats.get(tableId) ?? [];
+        const seat = getNextAvailableSeatNumber(tbl.total_number, used) ?? 1;
+        used.push(seat);
+        usedSeats.set(tableId, used);
+
+        newAssignments.push({
+          table_id: tableId,
+          guest_id: ai.guestId,
+          seat_number: seat,
+        });
+      }
+
+      return [...withoutAI, ...newAssignments];
+    });
+  };
 
   const onSelectTable = useCallback((tableId: string) => {
     setSelectedTableId(tableId);
@@ -550,7 +673,7 @@ const TableAssignmentPage = () => {
   }, [activeDragId, guestsById]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
   const onDragStart = (evt: DragStartEvent) => {
@@ -578,6 +701,8 @@ const TableAssignmentPage = () => {
           // In a real scenario, you'd pass these from the canvas component
           const canvasWidth = 800; // approximate
           const canvasHeight = 560;
+          if (!activeLayout) return prevTables;
+
           const cellWidth = canvasWidth / activeLayout.x_grid_size;
           const cellHeight = canvasHeight / activeLayout.y_grid_size;
 
@@ -589,21 +714,21 @@ const TableAssignmentPage = () => {
             0,
             Math.min(
               activeLayout.x_grid_size - 1,
-              Math.round(table.x_grid + deltaGridX)
-            )
+              Math.round(table.x_grid + deltaGridX),
+            ),
           );
           const newYGrid = Math.max(
             0,
             Math.min(
               activeLayout.y_grid_size - 1,
-              Math.round(table.y_grid + deltaGridY)
-            )
+              Math.round(table.y_grid + deltaGridY),
+            ),
           );
 
           return prevTables.map((t) =>
             t.table_id === tableId
               ? { ...t, x_grid: newXGrid, y_grid: newYGrid }
-              : t
+              : t,
           );
         });
         message.success(`Table ${tableId} repositioned`);
@@ -626,7 +751,7 @@ const TableAssignmentPage = () => {
     if (typeof overId === "string" && overId.startsWith("table:")) {
       const tableId = overId.slice("table:".length);
       const targetTable = tablesForActiveLayout.find(
-        (t) => t.table_id === tableId
+        (t) => t.table_id === tableId,
       );
       if (!targetTable) return;
 
@@ -638,7 +763,7 @@ const TableAssignmentPage = () => {
 
         const seat = getNextAvailableSeatNumber(
           targetTable.total_number,
-          usedSeatNumbers
+          usedSeatNumbers,
         );
         if (!seat) {
           message.warning("That table is full");
@@ -655,7 +780,7 @@ const TableAssignmentPage = () => {
       setSideView("table");
       const g = guestsById.get(guestId);
       message.success(
-        g ? `${fullName(g)} assigned to ${tableId}` : `Assigned to ${tableId}`
+        g ? `${fullName(g)} assigned to ${tableId}` : `Assigned to ${tableId}`,
       );
     }
   };
@@ -695,7 +820,10 @@ const TableAssignmentPage = () => {
           </div>
         </div>
 
-        <div className={styles.contentGrid}>
+        <div
+          className={styles.contentGrid}
+          style={{ height: "calc(100vh - 120px)", minHeight: 560 }}
+        >
           <Card
             className={styles.canvasCard}
             title={
@@ -709,6 +837,13 @@ const TableAssignmentPage = () => {
                 Grid {activeLayout.x_grid_size}×{activeLayout.y_grid_size}
               </Typography.Text>
             }
+            style={{ flex: "1 1 0%" }}
+            bodyStyle={{
+              height: "100%",
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
             <TablesCanvas
               tableOrder={tableOrder}
@@ -719,24 +854,57 @@ const TableAssignmentPage = () => {
               gridWidth={activeLayout.x_grid_size}
               gridHeight={activeLayout.y_grid_size}
               onTableMove={onTableMove}
+              guestsById={guestsById}
             />
           </Card>
 
-          <Card className={styles.sideCard}>
-            <div className={styles.sideTop}>
+          <Button
+            type="default"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              zIndex: 10,
+              borderRadius: 0,
+              borderTopRightRadius: 8,
+              borderBottomRightRadius: 8,
+            }}
+            onClick={() => setSidePanelOpen((open) => !open)}
+          >
+            {sidePanelOpen ? "Hide Guests" : "Show Guests"}
+          </Button>
+
+          <Card
+            size="small"
+            title={
               <Segmented
                 block
                 value={sideView}
                 onChange={(v) => setSideView(v as typeof sideView)}
                 options={segmentedOptions}
               />
-            </div>
-
+            }
+            className={styles.sideCard}
+            style={{
+              position: "relative",
+              width: 340,
+              zIndex: 20,
+              display: sidePanelOpen ? "flex" : "none",
+              overflow: "hidden",
+              borderRadius: 8,
+              flexDirection: "column",
+            }}
+            bodyStyle={{
+              padding: 0,
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             {sideView === "guests" ? (
-              <div className={styles.sideBody}>
+              <div className={styles.sideBody} style={{ height: "100%" }}>
                 <UnassignedDropZone />
-
-                <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                <Space direction="vertical" size={10} style={{ margin: 12 }}>
                   <Input.Search
                     value={guestSearch}
                     onChange={(e) => setGuestSearch(e.target.value)}
@@ -751,8 +919,10 @@ const TableAssignmentPage = () => {
                     options={relationOptions}
                   />
                 </Space>
-
-                <div className={styles.sideList}>
+                <div
+                  className={styles.sideList}
+                  style={{ height: "calc(100% - 180px)" }}
+                >
                   <List
                     size="small"
                     dataSource={filteredGuests}
@@ -773,7 +943,7 @@ const TableAssignmentPage = () => {
                 </div>
               </div>
             ) : (
-              <div className={styles.sideBody}>
+              <div className={styles.sideBody} style={{ height: "100%" }}>
                 {!selectedTable ? (
                   <Empty description="Select a table to view details." />
                 ) : (
@@ -792,13 +962,15 @@ const TableAssignmentPage = () => {
                           </Typography.Title>
                           <Typography.Text type="secondary">
                             Capacity {selectedTable.total_number} •{" "}
-                            {selectedTableGuests.length} seated
+                            {selectedTablePeopleCount} seated
                           </Typography.Text>
                         </div>
                       </Space>
                     </div>
-
-                    <div className={styles.sideList}>
+                    <div
+                      className={styles.sideList}
+                      style={{ height: "calc(100% - 80px)" }}
+                    >
                       <List
                         size="small"
                         locale={{ emptyText: "No guests assigned yet." }}
@@ -832,6 +1004,69 @@ const TableAssignmentPage = () => {
               </div>
             )}
           </Card>
+
+          {/* AI Seating Assistant Floating Button and Chat */}
+          <FloatButton
+            icon={<MessageOutlined />}
+            type="primary"
+            style={{ right: 32, bottom: 32, zIndex: 1000 }}
+            onClick={() => setAIChatOpen((open) => !open)}
+            tooltip={aiChatOpen ? undefined : "AI Seating Assistant"}
+          />
+          {aiChatOpen && (
+            <div
+              style={{
+                position: "fixed",
+                right: 32,
+                bottom: 96,
+                zIndex: 1100,
+                width: 400,
+                maxWidth: "90vw",
+                height: 520,
+                boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+                borderRadius: 12,
+                background: "#fff",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: 12,
+                  borderBottom: "1px solid #f0f0f0",
+                }}
+              >
+                <span style={{ fontWeight: 600, fontSize: 16 }}>
+                  <MessageOutlined style={{ marginRight: 8 }} />
+                  AI Seating Assistant
+                </span>
+                <FloatButton
+                  icon={<CloseOutlined />}
+                  type="default"
+                  style={{ boxShadow: "none", background: "transparent" }}
+                  onClick={() => setAIChatOpen(false)}
+                  tooltip={"Close"}
+                />
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <SeatingAIChat
+                  guests={hfGuests}
+                  tables={hfTables}
+                  onApplySeating={handleApplyAISeating}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
